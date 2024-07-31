@@ -54,6 +54,29 @@ function Create(props) {
   </article>
 }
 
+function Update(props) {
+  const [title, setTitle] = useState(props.title);
+  const [body, setBody] = useState(props.body);
+  return <article>
+    <h2>Update</h2>
+    <form onSubmit={event => {
+      event.preventDefault();
+      const title = event.target.title.value; //event.target = form tag
+      const body = event.target.body.value;
+      props.onUpdate(title, body);
+    }}>
+      <p><input type="text" name="title" placeholder='title' value={title} onChange={event=>{
+        setTitle(event.target.value);
+      }}></input></p>
+      <p><textarea name="body" placeholder='body' value={body} onChange={event=>{
+        setBody(event.target.value);
+      }}></textarea></p>
+      <p><input type="submit" value="Update"></input></p>    
+    </form>
+  </article>
+}
+
+
 function App() {
   // const _mode = useState(`Welcome`); //useState는 배열을 나타냄
   // console.log(_mode);
@@ -68,6 +91,7 @@ function App() {
   ]);
   const [nextId, setNextId] = useState(4);
   let content = null;
+  let contextControl = null;
   if (mode === `Welcome`) {
     content = <Article title="welcome" body="hello, web"></Article>
   } else if (mode === `READ`) {
@@ -80,6 +104,10 @@ function App() {
       }
     }
     content =  <Article title={title} body={body}></Article>
+    contextControl = <li><a href={'/update/'+id} onClick={event => {
+      event.preventDefault();
+      setMode('Update');
+    }}>Update</a></li>
   } else if (mode === 'create'){
     content = <Create onCreate={(_title, _body)=>{
       const newTopic = {id:nextId, title:_title, body:_body}
@@ -90,6 +118,28 @@ function App() {
       setId(nextId);
       setNextId(nextId+1);
     }}></Create>
+  } else if (mode === 'Update') {
+    let title, body = null;
+    for (let i=0; i<topics.length; i++) {
+      // console.log(topics[i].id, id)
+      if(topics[i].id === id){ //숫자인지 아닌지 잘 판별하기
+        title = topics[i].title;
+        body = topics[i].body;
+      }
+    }
+    content = <Update title={title} body={body} onUpdate={(_title, _body)=>{
+      // console.log(title, body);
+      const updatedTopic = {id:id, title:_title, body:_body}
+      const newTopics = [...topics];
+      for(let i = 0; i < newTopics.length; i++){
+        if(newTopics[i].id === id) {
+          newTopics[i] = updatedTopic;
+          break;
+        }
+      }
+      setTopics(newTopics);
+      setMode('READ');
+    }}></Update>
   }
   return (
     <div>
@@ -104,10 +154,13 @@ function App() {
         setId(_id);
       }}></Nav>
       {content}
-      <a href="/create" onClick={event => {
-        event.preventDefault(); //stops the browser from navigating to /create
-        setMode('create');
-      }}>create</a>
+      <ul>
+        <li><a href="/create" onClick={event => {
+          event.preventDefault(); //stops the browser from navigating to /create
+          setMode('create');
+        }}>create</a></li>
+        {contextControl} 
+      </ul>
     </div>
   );
 }
